@@ -29,7 +29,7 @@ function EditableContent({
       value={value}
       onChange={(e) => setValue(e.target.value)}
       onKeyDown={handleKeyDown}
-      className="focus-visible:ring-0"
+      className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-base leading-6 text-slate-900 shadow-inner focus-visible:ring-0"
     />
   );
 }
@@ -76,11 +76,13 @@ export function HumanMessage({
   return (
     <div
       className={cn(
-        "group ml-auto flex items-center gap-2",
-        isEditing && "w-full max-w-xl",
+        "group ml-auto flex w-full max-w-6xl items-end justify-end gap-4",
+        isEditing && "max-w-5xl",
       )}
     >
-      <div className={cn("flex flex-col gap-2", isEditing && "w-full")}>
+      <div
+        className={cn("flex w-full flex-col gap-4", isEditing && "w-full")}
+      >
         {isEditing ? (
           <EditableContent
             value={value}
@@ -88,10 +90,10 @@ export function HumanMessage({
             onSubmit={handleSubmitEdit}
           />
         ) : (
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-4">
             {/* Render images and files if no text */}
             {Array.isArray(message.content) && message.content.length > 0 && (
-              <div className="flex flex-wrap items-end justify-end gap-2">
+              <div className="flex flex-wrap items-end justify-end gap-4">
                 {message.content.reduce<React.ReactNode[]>(
                   (acc, block, idx) => {
                     if (isBase64ContentBlock(block)) {
@@ -99,7 +101,7 @@ export function HumanMessage({
                         <MultimodalPreview
                           key={idx}
                           block={block}
-                          size="md"
+                          size="lg"
                         />,
                       );
                     }
@@ -111,16 +113,16 @@ export function HumanMessage({
             )}
             {/* Render text if present, otherwise fallback to file/image name */}
             {contentString ? (
-              <p className="bg-muted ml-auto w-fit rounded-3xl px-4 py-2 text-right whitespace-pre-wrap">
-                {contentString}
-              </p>
+              <div className="ml-auto max-w-5xl whitespace-pre-wrap rounded-[36px] bg-gradient-to-br from-[#5b5fc7] via-[#4b52d0] to-[#3845d8] px-8 py-5 text-[1.25rem] leading-8 text-white shadow-2xl shadow-primary/30 md:text-[1.35rem]">
+                <p className="text-right">{contentString}</p>
+              </div>
             ) : null}
           </div>
         )}
 
         <div
           className={cn(
-            "ml-auto flex items-center gap-2 transition-opacity",
+            "ml-auto flex items-center gap-4 text-xs font-bold uppercase tracking-[0.2em] text-slate-300 transition-opacity",
             "opacity-0 group-focus-within:opacity-100 group-hover:opacity-100",
             isEditing && "opacity-100",
           )}

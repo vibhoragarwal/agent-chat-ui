@@ -77,8 +77,11 @@ function ScrollToBottom(props: { className?: string }) {
   if (isAtBottom) return null;
   return (
     <Button
-      variant="outline"
-      className={props.className}
+      variant="secondary"
+      className={cn(
+        "border-transparent bg-primary/90 text-white shadow-lg hover:bg-primary",
+        props.className,
+      )}
       onClick={() => scrollToBottom()}
     >
       <ArrowDown className="h-4 w-4" />
@@ -125,6 +128,8 @@ export function Thread() {
     parseAsBoolean.withDefault(false),
   );
   const [input, setInput] = useState("");
+  const inputRef = useRef<HTMLTextAreaElement | null>(null);
+
   const {
     contentBlocks,
     setContentBlocks,
@@ -234,6 +239,7 @@ export function Thread() {
 
     setInput("");
     setContentBlocks([]);
+    inputRef.current?.focus();
   };
 
   const handleRegenerate = (
@@ -255,11 +261,20 @@ export function Thread() {
     (m) => m.type === "ai" || m.type === "tool",
   );
 
+  useEffect(() => {
+    inputRef.current?.focus();
+  }, [chatHistoryOpen, threadId]);
+
   return (
-    <div className="flex h-screen w-full overflow-hidden">
-      <div className="relative hidden lg:flex">
+    <div className="flex min-h-screen w-full justify-center overflow-hidden bg-transparent px-3 py-4 sm:px-6 lg:px-10 lg:py-10">
+      <div
+        className={cn(
+          "relative hidden flex-none overflow-hidden transition-[width,opacity] duration-300 lg:flex",
+          chatHistoryOpen ? "w-[320px] pr-6 opacity-100" : "w-0 opacity-0 pointer-events-none",
+        )}
+      >
         <motion.div
-          className="absolute z-20 h-full overflow-hidden border-r bg-white"
+          className="absolute z-20 h-full overflow-hidden rounded-3xl border border-white/70 bg-white/80 shadow-2xl shadow-black/5 backdrop-blur"
           style={{ width: 300 }}
           animate={
             isLargeScreen
@@ -284,10 +299,16 @@ export function Thread() {
 
       <div
         className={cn(
-          "grid w-full grid-cols-[1fr_0fr] transition-all duration-500",
-          artifactOpen && "grid-cols-[3fr_2fr]",
+          "flex w-full flex-1",
+          chatHistoryOpen ? "gap-6" : "gap-0",
         )}
       >
+        <div
+          className={cn(
+            "grid w-full flex-1 grid-cols-[1fr_0fr] overflow-hidden rounded-[32px] border border-white/80 bg-white/95 shadow-2xl shadow-black/10 backdrop-blur transition-all duration-500",
+            artifactOpen && "grid-cols-[3fr_2fr]",
+          )}
+        >
         <motion.div
           className={cn(
             "relative flex min-w-0 flex-1 flex-col overflow-hidden",
@@ -309,11 +330,11 @@ export function Thread() {
           }
         >
           {!chatStarted && (
-            <div className="absolute top-0 left-0 z-10 flex w-full items-center justify-between gap-3 p-2 pl-4">
+            <div className="absolute top-0 left-0 z-10 flex w-full items-center justify-between gap-3 px-6 py-4">
               <div>
                 {(!chatHistoryOpen || !isLargeScreen) && (
                   <Button
-                    className="hover:bg-gray-100"
+                    className="hover:bg-secondary"
                     variant="ghost"
                     onClick={() => setChatHistoryOpen((p) => !p)}
                   >
@@ -325,18 +346,19 @@ export function Thread() {
                   </Button>
                 )}
               </div>
-              <div className="absolute top-2 right-4 flex items-center">
+              <div className="absolute top-4 right-6 flex items-center rounded-full bg-white/60 px-3 py-1 text-xs font-semibold text-slate-600 shadow-sm">
+                <span className="hidden sm:inline">Open source on</span>
                 <OpenGitHubRepo />
               </div>
             </div>
           )}
           {chatStarted && (
-            <div className="relative z-10 flex items-center justify-between gap-3 p-2">
-              <div className="relative flex items-center justify-start gap-2">
+            <div className="relative z-10 flex flex-wrap items-center justify-between gap-3 px-6 py-4">
+              <div className="relative flex flex-1 min-w-0 items-center gap-3">
                 <div className="absolute left-0 z-10">
                   {(!chatHistoryOpen || !isLargeScreen) && (
                     <Button
-                      className="hover:bg-gray-100"
+                      className="hover:bg-secondary"
                       variant="ghost"
                       onClick={() => setChatHistoryOpen((p) => !p)}
                     >
@@ -349,7 +371,7 @@ export function Thread() {
                   )}
                 </div>
                 <motion.button
-                  className="flex cursor-pointer items-center gap-2"
+                  className="flex cursor-pointer items-center gap-4 rounded-3xl border border-transparent px-4 py-2 transition hover:border-primary/30"
                   onClick={() => setThreadId(null)}
                   animate={{
                     marginLeft: !chatHistoryOpen ? 48 : 0,
@@ -361,42 +383,55 @@ export function Thread() {
                   }}
                 >
                   <LangGraphLogoSVG
-                    width={32}
-                    height={32}
+                    width={80}
+                    height={36}
+                    className="drop-shadow-sm"
                   />
-                  <span className="text-xl font-semibold tracking-tight">
-                    Agent Chat
-                  </span>
+                  <div className="flex flex-col items-start">
+                    <span className="text-[1.15rem] font-semibold tracking-tight text-slate-900">
+                      Hello Test Engineer
+                    </span>
+                    <span className="text-sm text-slate-500 md:text-base">
+                      SKF’s Teams-style copilot for bearing tests & diagnostics
+                    </span>
+                  </div>
                 </motion.button>
               </div>
 
-              <div className="flex items-center gap-4">
-                <div className="flex items-center">
+              <div className="flex flex-1 items-center justify-end gap-3">
+                <div className="hidden md:flex items-center rounded-full border border-white/60 bg-white/80 px-5 py-2 text-base font-semibold text-slate-600 shadow-sm">
+                  <span className="uppercase tracking-[0.25em] text-[0.65rem] text-slate-400">
+                    status
+                  </span>
+                  <span className="mx-2 h-5 w-px bg-slate-200" aria-hidden />
+                  <span className={cn("flex items-center gap-1", isLoading ? "text-amber-500" : "text-emerald-600")}>{isLoading ? "Thinking" : "Ready"}</span>
+                </div>
+                <div className="flex items-center rounded-full bg-white/70 px-3 py-1 shadow-sm">
                   <OpenGitHubRepo />
                 </div>
                 <TooltipIconButton
                   size="lg"
-                  className="p-4"
+                  className="h-12 w-12 rounded-full bg-primary text-white shadow-lg hover:bg-primary/90"
                   tooltip="New thread"
-                  variant="ghost"
+                  variant="default"
                   onClick={() => setThreadId(null)}
                 >
                   <SquarePen className="size-5" />
                 </TooltipIconButton>
               </div>
 
-              <div className="from-background to-background/0 absolute inset-x-0 top-full h-5 bg-gradient-to-b" />
+              <div className="from-background to-background/0 absolute inset-x-0 top-full h-8 bg-gradient-to-b" />
             </div>
           )}
 
           <StickToBottom className="relative flex-1 overflow-hidden">
             <StickyToBottomContent
               className={cn(
-                "absolute inset-0 overflow-y-scroll px-4 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-track]:bg-transparent",
+                "absolute inset-0 overflow-y-scroll px-4 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-300 [&::-webkit-scrollbar-track]:bg-transparent",
                 !chatStarted && "mt-[25vh] flex flex-col items-stretch",
                 chatStarted && "grid grid-rows-[1fr_auto]",
               )}
-              contentClassName="pt-8 pb-16 max-w-3xl mx-auto flex flex-col gap-4 w-full"
+              contentClassName="pt-10 pb-20 mx-auto flex w-full max-w-6xl flex-col gap-10"
               content={
                 <>
                   {messages
@@ -433,36 +468,40 @@ export function Thread() {
                 </>
               }
               footer={
-                <div className="sticky bottom-0 flex flex-col items-center gap-8 bg-white">
+                <div className="sticky bottom-0 flex flex-col items-center gap-10 bg-gradient-to-t from-white/95 via-white/90 to-white/60 px-4">
                   {!chatStarted && (
                     <div className="flex items-center gap-3">
-                      <LangGraphLogoSVG className="h-8 flex-shrink-0" />
-                      <h1 className="text-2xl font-semibold tracking-tight">
-                        Agent Chat
+                      <LangGraphLogoSVG className="h-10 flex-shrink-0" />
+                      <h1 className="text-3xl font-semibold tracking-tight text-slate-900">
+                        Hello Test Engineer
                       </h1>
                     </div>
                   )}
 
-                  <ScrollToBottom className="animate-in fade-in-0 zoom-in-95 absolute bottom-full left-1/2 mb-4 -translate-x-1/2" />
+                  <ScrollToBottom className="animate-in fade-in-0 zoom-in-95 absolute bottom-full left-1/2 mb-4 -translate-x-1/2 rounded-full bg-primary/90 text-white shadow-lg" />
 
                   <div
                     ref={dropRef}
                     className={cn(
-                      "bg-muted relative z-10 mx-auto mb-8 w-full max-w-3xl rounded-2xl shadow-xs transition-all",
+                      "bg-white relative z-10 mx-auto mb-10 w-full max-w-6xl rounded-[32px] border border-slate-100 shadow-2xl transition-all",
                       dragOver
-                        ? "border-primary border-2 border-dotted"
+                        ? "border-primary/60 border-2 border-dotted"
                         : "border border-solid",
                     )}
                   >
                     <form
                       onSubmit={handleSubmit}
-                      className="mx-auto grid max-w-3xl grid-rows-[1fr_auto] gap-2"
+                      className="mx-auto grid max-w-6xl grid-rows-[1fr_auto] gap-6"
                     >
                       <ContentBlocksPreview
                         blocks={contentBlocks}
                         onRemove={removeBlock}
                       />
                       <textarea
+                        ref={inputRef}
+                        autoFocus
+                        aria-label="Message the SKF assistant"
+                        spellCheck
                         value={input}
                         onChange={(e) => setInput(e.target.value)}
                         onPaste={handlePaste}
@@ -480,12 +519,12 @@ export function Thread() {
                           }
                         }}
                         placeholder="Type your message..."
-                        className="field-sizing-content resize-none border-none bg-transparent p-3.5 pb-0 shadow-none ring-0 outline-none focus:ring-0 focus:outline-none"
+                        className="field-sizing-content resize-none border-none bg-transparent px-6 pb-0 pt-2 text-[1.25rem] leading-8 text-slate-900 placeholder:text-slate-400 focus:ring-0 focus:outline-none"
                       />
 
-                      <div className="flex items-center gap-6 p-2 pt-4">
+                      <div className="flex flex-wrap items-center gap-4 border-t border-slate-100 px-6 pb-6 pt-4 text-base text-slate-600 lg:gap-8">
                         <div>
-                          <div className="flex items-center space-x-2">
+                          <div className="flex items-center gap-2">
                             <Switch
                               id="render-tool-calls"
                               checked={hideToolCalls ?? false}
@@ -493,7 +532,7 @@ export function Thread() {
                             />
                             <Label
                               htmlFor="render-tool-calls"
-                              className="text-sm text-gray-600"
+                              className="text-sm font-medium text-slate-500"
                             >
                               Hide Tool Calls
                             </Label>
@@ -501,12 +540,10 @@ export function Thread() {
                         </div>
                         <Label
                           htmlFor="file-input"
-                          className="flex cursor-pointer items-center gap-2"
+                          className="flex cursor-pointer items-center gap-3 rounded-full border border-slate-200 bg-slate-50 px-5 py-2.5 text-sm font-semibold text-slate-600 transition hover:border-primary/40 hover:bg-white"
                         >
-                          <Plus className="size-5 text-gray-600" />
-                          <span className="text-sm text-gray-600">
-                            Upload PDF or Image
-                          </span>
+                          <Plus className="size-5 text-primary" />
+                          <span>Upload PDF or Image</span>
                         </Label>
                         <input
                           id="file-input"
@@ -520,7 +557,7 @@ export function Thread() {
                           <Button
                             key="stop"
                             onClick={() => stream.stop()}
-                            className="ml-auto"
+                            className="ml-auto rounded-full border border-transparent bg-slate-100 px-7 py-2.5 text-lg font-semibold text-slate-700 shadow-sm hover:bg-slate-200"
                           >
                             <LoaderCircle className="h-4 w-4 animate-spin" />
                             Cancel
@@ -528,7 +565,7 @@ export function Thread() {
                         ) : (
                           <Button
                             type="submit"
-                            className="ml-auto shadow-md transition-all"
+                            className="ml-auto rounded-full bg-primary px-10 py-3 text-lg font-semibold text-white shadow-2xl shadow-primary/40 transition-all hover:bg-primary/90"
                             disabled={
                               isLoading ||
                               (!input.trim() && contentBlocks.length === 0)
@@ -545,20 +582,21 @@ export function Thread() {
             />
           </StickToBottom>
         </motion.div>
-        <div className="relative flex flex-col border-l">
+        <div className="relative hidden min-h-full flex-col border-l border-white/60 bg-gradient-to-b from-white/90 via-white/80 to-white/60 px-0 py-0 backdrop-blur lg:flex">
           <div className="absolute inset-0 flex min-w-[30vw] flex-col">
-            <div className="grid grid-cols-[1fr_auto] border-b p-4">
+            <div className="grid grid-cols-[1fr_auto] items-center border-b border-white/60 px-6 py-4">
               <ArtifactTitle className="truncate overflow-hidden" />
               <button
                 onClick={closeArtifact}
-                className="cursor-pointer"
+                className="cursor-pointer rounded-full border border-transparent p-2 transition hover:border-primary/40 hover:bg-white"
               >
                 <XIcon className="size-5" />
               </button>
             </div>
-            <ArtifactContent className="relative flex-grow" />
+            <ArtifactContent className="relative flex-grow px-6 py-4" />
           </div>
         </div>
+      </div>
       </div>
     </div>
   );

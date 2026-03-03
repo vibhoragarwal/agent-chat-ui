@@ -54,7 +54,7 @@ You can bypass the initial setup form by setting the following environment varia
 
 ```bash
 NEXT_PUBLIC_API_URL=http://localhost:2024
-NEXT_PUBLIC_ASSISTANT_ID=agent
+NEXT_PUBLIC_ASSISTANT_ID=test_engineer_agent
 ```
 
 > [!TIP]
@@ -216,6 +216,16 @@ Let's cover what each of these environment variables does:
 - `LANGSMITH_API_KEY`: Your LangSmith API key to use when authenticating requests sent to LangGraph servers. Once again, do _not_ prefix this with `NEXT_PUBLIC_` since it's a secret, and is only used on the server when the API proxy injects it into the request to your deployed LangGraph server.
 
 For in depth documentation, consult the [LangGraph Next.js API Passthrough](https://www.npmjs.com/package/langgraph-nextjs-api-passthrough) docs.
+
+## Customizations & Tracking
+
+This fork layers a Teams-inspired SKF experience on top of the default Agent Chat UI. Key modifications include:
+
+- **SKF Branding** — The LangGraph bird was replaced with the official SKF black mark so the chat header, setup form, and metadata all reflect the new branding (`public/skf-logo-black.svg`, `src/components/icons/langgraph.tsx`, `src/components/thread/index.tsx`, `src/providers/Stream.tsx`, `src/app/layout.tsx`).
+- **Teams-style UX Refresh** — Expanded layouts, softened gradients, and larger typography create a denser, full-width canvas that mirrors Microsoft Teams (`src/app/globals.css`, `src/components/thread/index.tsx`, `src/components/thread/messages/ai.tsx`, `src/components/thread/messages/human.tsx`).
+- **Composer Quality-of-life** — The textarea now autofocuses/re-focuses after sends and when toggling panes so the cursor always returns to the message entry field (`src/components/thread/index.tsx`).
+
+Use this section to track any future overrides so downstream merges stay manageable.
 
 ### Advanced Setup - Custom Authentication
 
