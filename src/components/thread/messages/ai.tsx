@@ -1,7 +1,7 @@
 import { parsePartialJson } from "@langchain/core/output_parsers";
 import { useStreamContext } from "@/providers/Stream";
 import { AIMessage, Checkpoint, Message } from "@langchain/langgraph-sdk";
-import { getContentString } from "../utils";
+import { getContentString, hasRenderableText } from "../utils";
 import { BranchSwitcher, CommandBar } from "./shared";
 import { MarkdownText } from "../markdown-text";
 import { LoadExternalComponent } from "@langchain/langgraph-sdk/react-ui";
@@ -101,10 +101,12 @@ function Interrupt({
 export function AssistantMessage({
   message,
   isLoading,
+  firstTokenReceived,
   handleRegenerate,
 }: {
   message: Message | undefined;
   isLoading: boolean;
+  firstTokenReceived: boolean;
   handleRegenerate: (parentCheckpoint: Checkpoint | null | undefined) => void;
 }) {
   const content = message?.content ?? [];
@@ -156,6 +158,13 @@ export function AssistantMessage({
             <ToolCalls toolCalls={message.tool_calls} />
           )))) ||
     null;
+  const shouldShowInlineLoader =
+    !firstTokenReceived &&
+    isLastMessage &&
+    !isToolResult &&
+    message?.type === "ai" &&
+    !hasRenderableText(contentString) &&
+    !renderedToolCalls;
 
   if (isToolResult && hideToolCalls) {
     return null;
@@ -175,10 +184,14 @@ export function AssistantMessage({
           </>
         ) : (
           <>
-            {contentString.length > 0 && (
-              <div className="mr-auto w-full max-w-5xl rounded-[34px] border border-slate-100 bg-white/95 px-8 py-5 text-[1.25rem] leading-8 text-slate-900 shadow-md shadow-black/5 md:text-[1.35rem]">
-                <MarkdownText>{contentString}</MarkdownText>
-              </div>
+            {shouldShowInlineLoader ? (
+              <InlineAssistantTypingIndicator />
+            ) : (
+              hasRenderableText(contentString) && (
+                <div className="mr-auto w-full max-w-5xl rounded-[34px] border border-slate-100 bg-white/95 px-8 py-5 text-[1.25rem] leading-8 text-slate-900 shadow-md shadow-black/5 md:text-[1.35rem]">
+                  <MarkdownText>{contentString}</MarkdownText>
+                </div>
+              )
             )}
 
             {renderedToolCalls && (
@@ -227,11 +240,35 @@ export function AssistantMessage({
 export function AssistantMessageLoading() {
   return (
     <div className="mr-auto flex items-start gap-2">
-      <div className="flex items-center gap-1 rounded-[28px] border border-slate-100 bg-white/90 px-5 py-3 text-slate-600 shadow-md shadow-black/5">
-        <div className="bg-foreground/50 h-2 w-2 animate-[pulse_1.5s_ease-in-out_infinite] rounded-full"></div>
-        <div className="bg-foreground/50 h-2 w-2 animate-[pulse_1.5s_ease-in-out_0.5s_infinite] rounded-full"></div>
-        <div className="bg-foreground/50 h-2 w-2 animate-[pulse_1.5s_ease-in-out_1s_infinite] rounded-full"></div>
+      <TypingDotsBubble className="rounded-[28px] border border-slate-100 bg-white/90 px-5 py-3 text-slate-600" />
+    </div>
+  );
+}
+
+function InlineAssistantTypingIndicator() {
+  return (
+    <div className="mr-auto w-full max-w-5xl rounded-[34px] border border-slate-100 bg-white/95 px-8 py-5 shadow-md shadow-black/5">
+      <div className="flex items-center gap-1 text-[1.25rem] leading-8 text-slate-500 md:text-[1.35rem]">
+        <TypingDots />
       </div>
     </div>
+  );
+}
+
+function TypingDotsBubble({ className }: { className?: string }) {
+  return (
+    <div className={cn("flex items-center gap-1 shadow-md shadow-black/5", className)}>
+      <TypingDots />
+    </div>
+  );
+}
+
+function TypingDots() {
+  return (
+    <>
+      <div className="bg-foreground/50 h-2 w-2 animate-[pulse_1.5s_ease-in-out_infinite] rounded-full"></div>
+      <div className="bg-foreground/50 h-2 w-2 animate-[pulse_1.5s_ease-in-out_0.5s_infinite] rounded-full"></div>
+      <div className="bg-foreground/50 h-2 w-2 animate-[pulse_1.5s_ease-in-out_1s_infinite] rounded-full"></div>
+    </>
   );
 }

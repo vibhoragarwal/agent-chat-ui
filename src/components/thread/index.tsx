@@ -45,6 +45,7 @@ import {
   ArtifactTitle,
   useArtifactContext,
 } from "./artifact";
+import { getContentString, hasRenderableText } from "./utils";
 
 function StickyToBottomContent(props: {
   content: ReactNode;
@@ -185,18 +186,18 @@ export function Thread() {
     }
   }, [stream.error]);
 
-  // TODO: this should be part of the useStream hook
-  const prevMessageLength = useRef(0);
   useEffect(() => {
+    const lastRenderableMessage = [...messages]
+      .reverse()
+      .find((message) => !message.id?.startsWith(DO_NOT_RENDER_ID_PREFIX));
+
     if (
-      messages.length !== prevMessageLength.current &&
-      messages?.length &&
-      messages[messages.length - 1].type === "ai"
+      lastRenderableMessage?.type === "ai" &&
+      lastRenderableMessage.content &&
+      hasRenderableText(getContentString(lastRenderableMessage.content))
     ) {
       setFirstTokenReceived(true);
     }
-
-    prevMessageLength.current = messages.length;
   }, [messages]);
 
   const handleSubmit = (e: FormEvent) => {
@@ -260,6 +261,13 @@ export function Thread() {
   const hasNoAIOrToolMessages = !messages.find(
     (m) => m.type === "ai" || m.type === "tool",
   );
+  const hasRenderableAiMessage = messages.some((m) => {
+    if (m.type !== "ai" || m.id?.startsWith(DO_NOT_RENDER_ID_PREFIX)) {
+      return false;
+    }
+    if (!m.content) return false;
+    return hasRenderableText(getContentString(m.content));
+  });
 
   useEffect(() => {
     inputRef.current?.focus();
@@ -448,6 +456,7 @@ export function Thread() {
                           key={message.id || `${message.type}-${index}`}
                           message={message}
                           isLoading={isLoading}
+                          firstTokenReceived={firstTokenReceived}
                           handleRegenerate={handleRegenerate}
                         />
                       ),
@@ -459,10 +468,11 @@ export function Thread() {
                       key="interrupt-msg"
                       message={undefined}
                       isLoading={isLoading}
+                      firstTokenReceived={firstTokenReceived}
                       handleRegenerate={handleRegenerate}
                     />
                   )}
-                  {isLoading && !firstTokenReceived && (
+                  {isLoading && !firstTokenReceived && !hasRenderableAiMessage && (
                     <AssistantMessageLoading />
                   )}
                 </>
