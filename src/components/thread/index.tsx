@@ -6,7 +6,7 @@ import { useStreamContext } from "@/providers/Stream";
 import { useState, FormEvent } from "react";
 import { Button } from "../ui/button";
 import { Checkpoint, Message } from "@langchain/langgraph-sdk";
-import { AssistantMessage, AssistantMessageLoading } from "./messages/ai";
+import { AssistantMessage } from "./messages/ai";
 import { HumanMessage } from "./messages/human";
 import {
   DO_NOT_RENDER_ID_PREFIX,
@@ -471,9 +471,6 @@ export function Thread() {
                       firstTokenReceived={firstTokenReceived}
                       handleRegenerate={handleRegenerate}
                     />
-                  )}
-                  {isLoading && !firstTokenReceived && !hasRenderableAiMessage && (
-                    <AssistantMessageLoading />
                   )}
                 </>
               }

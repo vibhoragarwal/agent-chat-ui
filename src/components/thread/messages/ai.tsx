@@ -237,28 +237,12 @@ export function AssistantMessage({
   );
 }
 
-export function AssistantMessageLoading() {
-  return (
-    <div className="mr-auto flex items-start gap-2">
-      <TypingDotsBubble className="rounded-[28px] border border-slate-100 bg-white/90 px-5 py-3 text-slate-600" />
-    </div>
-  );
-}
-
 function InlineAssistantTypingIndicator() {
   return (
     <div className="mr-auto w-full max-w-5xl rounded-[34px] border border-slate-100 bg-white/95 px-8 py-5 shadow-md shadow-black/5">
       <div className="flex items-center gap-1 text-[1.25rem] leading-8 text-slate-500 md:text-[1.35rem]">
         <TypingDots />
       </div>
-    </div>
-  );
-}
-
-function TypingDotsBubble({ className }: { className?: string }) {
-  return (
-    <div className={cn("flex items-center gap-1 shadow-md shadow-black/5", className)}>
-      <TypingDots />
     </div>
   );
 }
